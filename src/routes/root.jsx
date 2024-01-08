@@ -1,9 +1,34 @@
-import { Outlet, Link } from 'react-router-dom';
-// import { getContacts } from '../contacts';
+import { 
+	Outlet, 
+	Link,
+	useLoaderData,
+	Form,
+} from 'react-router-dom';
+import { getContacts, createContact } from '../contacts';
 
+// loader() provides data to route before it renders output
+// a loader() lets a route "read" data
+// instead of sending request to server to get data it redirects that request
+// to the front end app using a <Link>
+// loader() is called whenever the app send a get request
+export async function loader() {
+  const contacts = await getContacts();
+  return { contacts };
+}
+
+// action() mutates data to route before it renders output 
+// action() lets a route "write" data
+// Actions are called whenever the app sends a non-get request
+// ("post", "put", "patch", "delete") to your route. 
+export async function action() {
+  const contact = await createContact();
+  return { contact };
+}
 
 
 export default function Root() {
+	// useLoaderData() This hook provides the value returned from your route loader.
+	const { contacts } = useLoaderData();
   return (
     <>
       <div id="sidebar">
@@ -27,20 +52,35 @@ export default function Root() {
               aria-live="polite"
             ></div>
           </form>
-          <form method="post">
+          <Form method="post">
             <button type="submit">New</button>
-          </form>
+          </Form>
         </div>
-        <nav>
-          <ul>
-            <li>
-              <Link to={`/contacts/1`}>Your Name</Link>
-            </li>
-            <li>
-              <Link to={`/contacts/2`}>Your Friend</Link>
-            </li>
-          </ul>
-        </nav>
+			<nav>
+			{contacts.length ? (
+				<ul>
+				{contacts.map((contact) => (
+					<li key={contact.id}>
+					<Link to={`contacts/${contact.id}`}>
+					{contact.first || contact.last ? (
+						<>
+						{contact.first} {contact.last}
+						</>
+					) : (
+						<i>No Name</i>
+					)}{" "}
+					{contact.favorite && <span>★</span>}
+					</Link>
+					</li>
+				))}
+				</ul>
+			) : (
+				<p>
+				<i>No contacts</i>
+				</p>
+			)}
+
+			</nav>
       </div>
       <div id="detail">
 				<Outlet />

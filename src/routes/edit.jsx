@@ -5,9 +5,11 @@ import {
 } from "react-router-dom";
 import { updateContact } from '../contacts';
 
-// used to make a POST request to our contact router
+// used to make a POST request to our contact router instead of server (client side routing)
 export async function action({ request, params }) {
   const formData = await request.formData();
+	//  fromEntries() gets all the fields
+	//  for only one field do this: formData.get("<field>")
   const updates = Object.fromEntries(formData);
   await updateContact(params.contactId, updates);
   return redirect(`/contacts/${params.contactId}`);

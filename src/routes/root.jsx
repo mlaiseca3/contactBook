@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { 
 	Outlet, 
 	NavLink,
@@ -6,6 +7,7 @@ import {
 	Form,
 	redirect,
 	useNavigation,
+	useSubmit,
 } from 'react-router-dom';
 import { getContacts, createContact } from '../contacts';
 
@@ -14,9 +16,11 @@ import { getContacts, createContact } from '../contacts';
 // instead of sending request to server to get data it redirects that request
 // to the front end app using a <Link>
 // loader() is called whenever the app send a get request
-export async function loader() {
-  const contacts = await getContacts();
-  return { contacts };
+export async function loader({ request }) {
+	const url = new URL(request.url);
+	const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts, q};
 }
 
 // action() mutates data to route before it renders output 
@@ -31,20 +35,30 @@ export async function action() {
 
 export default function Root() {
 	// useLoaderData() This hook provides the value returned from your route loader.
-	const { contacts } = useLoaderData();
+	const { contacts, q } = useLoaderData();
 	const navigation = useNavigation();
+	const submit = useSubmit();
+	
+	useEffect(() => {
+		document.getElementById('q').value = q
+	}, [q]);
+
   return (
     <>
       <div id="sidebar">
         <h1>React Router Contacts</h1>
         <div>
-          <form id="search-form" role="search">
+          <Form id="search-form" role="search">
             <input
               id="q"
               aria-label="Search contacts"
               placeholder="Search"
               type="search"
               name="q"
+							defaultValue={q}
+							onChange={(event) => {
+								submit(event.currentTarget.form);
+							}}
             />
             <div
               id="search-spinner"
@@ -55,7 +69,7 @@ export default function Root() {
               className="sr-only"
               aria-live="polite"
             ></div>
-          </form>
+          </Form>
           <Form method="post">
             <button type="submit">New</button>
           </Form>
